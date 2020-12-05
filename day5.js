@@ -3,34 +3,17 @@ function runFunction() {
       var fr = new FileReader();
       fr.onload = function () {
         var lines = this.result.split("\n");
-        var highestId = 0;
-        lines.forEach(element => {
-            var rows = [...Array(128).keys()];
-            var columns = [...Array(8).keys()];
-            while (rows.length > 1) {
-                const half = Math.ceil(rows.length / 2);    
-                if (element.charAt(0) === 'F') {
-                    rows = rows.splice(0, half)
-                } else {
-                    rows = rows.splice(-half)
-                }
-                element = element.substring(1);
+        const seats = lines.map(element => parseInt(element.replace(/[FL]/g, '0').replace(/[BR]/g, '1'), 2));
+        console.log(Math.max(...seats));
+        var mySeat = 0;
+        var i = 0;
+        for (i = Math.min(...seats); i < Math.max(...seats); i++) {
+            if (!seats.includes(i) && seats.includes(i+1) && seats.includes(i-1)) {
+                mySeat = i;
             }
-            while (columns.length > 1) {
-                const half = Math.ceil(columns.length / 2);    
-                if (element.charAt(0) === 'L') {
-                    columns = columns.splice(0, half)
-                } else {
-                    columns = columns.splice(-half)
-                }
-                element = element.substring(1);
-            }
-            const seatId = rows[0] * 8 + columns[0];
-            if (seatId > highestId) {
-                highestId = seatId;
-            }
-        });
-        document.getElementById("demo").textContent = highestId;
+        }
+        
+       console.log(mySeat);
       };
   
       fr.readAsText(this.files[0]);
