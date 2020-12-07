@@ -73,7 +73,7 @@ function runFunction() {
           } else {
             success = false;
           }
-          var hairRegex = new RegExp("^[a-z0-9]{6}$");
+          var hairRegex = new RegExp("^[a-f0-9]{6}$");
           if (hcl.charAt(0) === "#") {
             success = success && hairRegex.test(hcl.substring(1));
           } else {
