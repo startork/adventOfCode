@@ -7,6 +7,9 @@ function runFunction() {
     fr.onload = function () {
       lines = this.result.split("\r\n");
       newLines = lines.slice(0);
+      // part one
+      console.log(runLoop()[1]);
+
       var index = 0;
       while (runLoop()[0]) {
         newLines = lines.slice(0);
@@ -14,6 +17,7 @@ function runFunction() {
         index++;
       }
 
+      // part two
       console.log(runLoop()[1]);
     };
 
