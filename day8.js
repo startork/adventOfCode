@@ -8,35 +8,33 @@ function runFunction() {
       lines = this.result.split("\r\n");
       newLines = lines.slice(0);
       // part one
-      console.log(runLoop()[1]);
+      results = runLoop();
+      console.log(results[1]);
 
-      var index = 0;
-      while (runLoop()[0]) {
+      for (i = 0; i < results[2].length; i++) {
         newLines = lines.slice(0);
-        index = changeLine(index);
-        index++;
+        index = results[2][i];
+        const [inst, amount] = newLines[index].split(" ");
+        switch (inst) {
+          case "acc":
+            break;
+          case "nop":
+            newLines[index] = "jmp " + amount;
+            break;
+          case "jmp":
+            newLines[index] = "nop " + amount;
+            break;
+        }
+        if (!(inst === "acc") && !runLoop()[0]) {
+          break;
+        }
       }
-
       // part two
       console.log(runLoop()[1]);
     };
 
     fr.readAsText(this.files[0]);
   });
-}
-
-function changeLine(index) {
-  const [inst, amount] = newLines[index].split(" ");
-  switch (inst) {
-    case "acc":
-      return changeLine(index + 1);
-    case "nop":
-      newLines[index] = "jmp " + amount;
-      return index;
-    case "jmp":
-      newLines[index] = "nop " + amount;
-      return index;
-  }
 }
 
 function runLoop() {
@@ -57,5 +55,5 @@ function runLoop() {
         break;
     }
   }
-  return [completed.includes(index), acc];
+  return [completed.includes(index), acc, completed];
 }
