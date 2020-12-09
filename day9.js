@@ -19,22 +19,29 @@ function runFunction() {
         }
       }
 
-      const possibleList = lines.slice(failIndex - 25, failIndex);
-      const result = loop([], possibleList, lines[failIndex]);
-      console.log(result);
+      const possibleList = lines.slice(0, failIndex);
+      const goal = lines[failIndex];
+      var conNumbers = []
+      for (i = 0; i < possibleList.length; i++) {
+        const yaBoi = possibleList.slice(i);
+        var amount = 0;
+        for (p = 0; p < yaBoi.length; p++) {
+          amount += yaBoi[p];
+          if (amount === goal) {
+            conNumbers = yaBoi.slice(0, p + 1);
+            break;
+          } else if (amount > goal) {
+            break;
+          }
+        }
+        if (conNumbers.length) {
+          break;
+        }
+      }
+
+      console.log(Math.max(...conNumbers) + Math.min(...conNumbers));
     };
 
     fr.readAsText(this.files[0]);
   });
-}
-
-function loop(i, list, goal) {
-  for (index = 0; index < list.length; index++) {
-    if (!i.includes(index)) {
-      i.push(index);
-      if (list[index] + loop(i, list, goal) === goal) {
-        return list[index];
-      }
-    }
-  }
 }
