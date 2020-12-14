@@ -30,7 +30,7 @@ lines.forEach((line) => {
 // Step One
 console.log(mem.reduce((a, b) => a + b, 0));
 
-mem = [];
+mem = {};
 mask = [];
 let addresses = [];
 lines.forEach((line) => {
@@ -54,8 +54,8 @@ lines.forEach((line) => {
     });
     splitX(binary, 0);
     addresses.forEach((address) => {
-      i = parseInt(address.join(""), 2);
-      mem[i] = value;
+      index = address.join("");
+      mem[index] = parseInt(value);
     });
   }
 });
@@ -76,4 +76,4 @@ function splitX(maskToSplit, index) {
 }
 
 // Step Two
-console.log(mem.reduce((a, b) => a + parseInt(b), 0));
+console.log(Object.values(mem).reduce((a, b) => a + b, 0));
