@@ -56,5 +56,33 @@ for (i = 0; i < validTickets[0].length; i++) {
     .map((x) => rules.findIndex((r) => r === x))
   locationObject[i] = ruleIndex
 }
+let newObject = {}
+while (Object.keys(locationObject).length > 0) {
+  const values = Object.keys(locationObject).filter(
+    (r) => locationObject[r].length === 1
+  )
+  let numbers = []
+  values.forEach((x) => {
+    const newValue = locationObject[x][0]
+    numbers.push(newValue)
+    newObject[newValue] = x
+    delete locationObject[x]
+    Object.keys(locationObject).forEach((x) => {
+      locationObject[x] = locationObject[x].filter((t) => t !== newValue)
+    })
+  })
+}
 
-console.log(locationObject)
+console.log(newObject)
+const myTicket = "157,101,107,179,181,163,191,109,97,103,89,113,167,127,151,53,83,61,59,173".split(
+  ","
+)
+
+const correct = [16, 3, 11, 17, 4, 5]
+let list = []
+correct.forEach((x) => {
+  console.log(x)
+  list.push(parseInt(myTicket[x]))
+})
+console.log(list)
+console.log(list.reduce((a, b) => a * b, 1))
