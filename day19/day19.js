@@ -1,52 +1,34 @@
 const fs = require("fs");
 const text = fs.readFileSync("input.txt", { encoding: "utf-8" });
-let [rules, input] = text.split("\n\n");
+const [rules, input] = text.split("\n\n");
 
-ruleObject = {};
+//Part one redone
+ruleRegex = buildRulesV2(rules);
+console.log(ruleRegex)
+console.log(input.split('\n').filter(str => ruleRegex.test(str)).length);
 
-const cartesian = (...a) =>
-  a.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e].flat())));
-
-rules.split("\n").forEach((ruleLine) => {
-  let [id, rule] = ruleLine.split(": ");
-  ruleObject[id] = rule.split(" | ").map((x) => {
-    if (['"a"', '"b"'].includes(x)) {
-      return x[1];
-    }
-    return x.split(" ");
-  });
-});
-
-function buildRules(locRules) {
-  if (["a", "b"].includes(locRules[0])) {
-    return locRules;
-  }
-  let newRules = [];
-  locRules.forEach((rule) => {
-    let locRule = [];
-    rule.forEach((key) => {
-      const k = buildRules(ruleObject[key]);
-      locRule.push(k);
-    });
-    if (locRule.length > 1) {
-      const options = cartesian(...locRule);
-      options.forEach((option) => {
-        newRules.push(option.join(""));
-      });
+function buildRulesV2(rules) {
+  let ruleObj = {};
+  rules.split('\n').forEach(r => {
+    [key, d] = r.split(': ');
+    if (['"a"', '"b"'].includes(d)) {
+      ruleObj[key] = {'rule': d.replace(/"/g, ''), 'solved': true};
     } else {
-      newRules.push(...locRule[0]);
+      ruleObj[key] = {'rule': d, 'solved': d === '"a"'};
     }
   });
-  return newRules;
+  
+  return new RegExp('^' + giveRuleRegex('0').replace(/ /g, '') + '$');
+  
+  function giveRuleRegex(ruleKey) {
+    const rule = ruleObj[ruleKey];
+    if (rule.solved) {
+      return rule.rule;
+    } 
+    rule.rule = '(?:' + rule.rule.replace(/[0-9]+/ig, giveRuleRegex) + ')';
+    rule.solved = true;
+    return rule.rule
+  }
 }
 
-let newObject = {};
-Object.keys(ruleObject).forEach((key) => {
-  newObject[key] = buildRules(ruleObject[key]);
-});
 
-const lines = input.split("\n");
-const results = newObject["0"];
-const matches = lines.filter((line) => results.includes(line)).length;
-
-console.log("Part 1: " + matches);
