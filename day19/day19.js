@@ -4,42 +4,38 @@ const [rulesPartOne, input] = text.split("\n\n");
 const text2 = fs.readFileSync("input2.txt", { encoding: "utf-8"});
 const [rulesPartTwo] = text2.split('\n\n');
 const tests = input.split('\n');
-//Part one redone
-let ruleObj = {};
-const ruleRegex = buildRulesV2(rulesPartOne);
-const partOneMatches = tests.filter(str => ruleRegex.test(str)).length;
+
+//Part One V2
+const ruleObj1 = buildRuleObject(rulesPartOne);
+const ruleRegex1 = buildRuleRegex(ruleObj1, '0');
+const partOneMatches = tests.filter(str => ruleRegex1.test(str)).length;
 console.log('Part 1: ' + partOneMatches);
 
-//Part two
-//Manual job 
-Object.keys(ruleObj).forEach(key => {
-  if (key !== '123' || key !== '97')
-  ruleObj[key].solved = false;
-})
-ruleObj['8'].rule = '(?:(?:' + ruleObj['42'].rule + ')+)';
-ruleObj['8'].solved = true;
-for (let i = 0; i < 15; i++) {
-  ruleObj['11'].rule = '(?:' + ruleObj['11'].rule + '|' + ruleObj['42'].rule + ruleObj['11'].rule + ruleObj['31'].rule + ')';
-} 
-ruleObj['11'].solved = true;
-const ruleRegex2 = buildRuleRegex('0');
-const partTwoMatches = tests.filter(str => ruleRegex2.test(str)).length;
-console.log('Part 2: ' + partTwoMatches);
+//Part Two
+const longest = tests.reduce(
+  function (a, b) {
+      return a.length > b.length ? a : b;
+  }
+).length;
+const ruleObj2 = buildRuleObject(rulesPartTwo);
+const ruleRegex2 = buildRuleRegex(ruleObj2, '0');
 
-function buildRulesV2(rules) {
+
+function buildRuleObject(rules) {
+  let object = {};
   rules.split('\n').forEach(r => {
     [key, d] = r.split(': ');
     if (['"a"', '"b"'].includes(d)) {
-      ruleObj[key] = {'rule': d.replace(/"/g, ''), 'solved': true};
+      object[key] = {'rule': d.replace(/"/g, ''), 'solved': true};
     } else {
-      ruleObj[key] = {'rule': d, 'solved': d === '"a"'};
+      object[key] = {'rule': d, 'solved': d === '"a"'};
     }
   });
 
-  return buildRuleRegex('0');
+  return object;
 }
 
-function buildRuleRegex(ruleKey) {
+function buildRuleRegex(ruleObj, ruleKey) {
   return new RegExp('^' + regexLoop(ruleKey).replace(/ /g, '') + '$');
 
   function regexLoop(ruleKey) {
@@ -47,10 +43,25 @@ function buildRuleRegex(ruleKey) {
     if (rule.solved) {
       return rule.rule;
     } 
-    if (ruleKey === '8') {
-      return '(?:' + regexLoop('42') +')+'
+    if (rule.rule.split(' ').includes(ruleKey)) {
+      //We have a loop!!
+      if (ruleKey == 8) {
+        //For rule 8 we can just use regex trickery
+        rule.rule = '(?:' + regexLoop('42') + ')+';
+      } else {
+        //Rule 11 is essentially a palindrome which we know is 
+        //impossible to test for with raw regex
+        const rule42 = regexLoop('42');
+        const rule32 = regexLoop('32');
+        const iterations = longest / (rule42.replace(/[^ab]/g, '').length + rule32.replace(/[^ab]/g, '').length);
+        for (let i = 0; i < iterations; i++) {
+          rule.rule = '(?:' + rule.rule + ')'
+        }
+      }
+    } else {
+      rule.rule = '(?:' + rule.rule.replace(/[0-9]+/ig, regexLoop) + ')';
     }
-    rule.rule = '(?:' + rule.rule.replace(/[0-9]+/ig, regexLoop) + ')';
+    
     rule.solved = true;
     return rule.rule
   } 
