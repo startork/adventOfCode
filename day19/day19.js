@@ -14,11 +14,13 @@ console.log('Part 1: ' + partOneMatches);
 //Part Two
 const longest = tests.reduce(
   function (a, b) {
-      return a.length > b.length ? a : b;
+    return a.length > b.length ? a : b;
   }
 ).length;
 const ruleObj2 = buildRuleObject(rulesPartTwo);
 const ruleRegex2 = buildRuleRegex(ruleObj2, '0');
+const matches2 = tests.filter(str => ruleRegex2.test(str)).length;
+console.log('Part 2: ' + matches2);
 
 
 function buildRuleObject(rules) {
@@ -43,20 +45,24 @@ function buildRuleRegex(ruleObj, ruleKey) {
     if (rule.solved) {
       return rule.rule;
     } 
+
     if (rule.rule.split(' ').includes(ruleKey)) {
       //We have a loop!!
+      //Only used for part TWO
       if (ruleKey == 8) {
         //For rule 8 we can just use regex trickery
         rule.rule = '(?:' + regexLoop('42') + ')+';
       } else {
         //Rule 11 is essentially a palindrome which we know is 
         //impossible to test for with raw regex
-        const rule42 = regexLoop('42');
-        const rule32 = regexLoop('32');
-        const iterations = longest / (rule42.replace(/[^ab]/g, '').length + rule32.replace(/[^ab]/g, '').length);
-        for (let i = 0; i < iterations; i++) {
-          rule.rule = '(?:' + rule.rule + ')'
+        const rule42 = regexLoop('42').replace(/ /g, '');
+        const rule31 = regexLoop('31').replace(/ /g, '');
+        rule.rule = `${rule42}${rule31}`
+        //build rules assuming that the smallest combination of 42 and 31 is two letters
+        for (let i = 2; i < longest/2 + 2; i++) {
+          rule.rule = `${rule.rule}|${rule42.repeat(i)}${rule31.repeat(i)}`;
         }
+        rule.rule = '(?:' + rule.rule + ')';
       }
     } else {
       rule.rule = '(?:' + rule.rule.replace(/[0-9]+/ig, regexLoop) + ')';
