@@ -42,51 +42,227 @@ function buildEdges(rawTiles) {
 }
 
 //Part Two (this is gonna be hard)
+const mapWidth = Math.sqrt(tilesRaw.length);
 const cleanTiles2 = buildEdgesV2(tilesRaw);
 buildMatchedEdges(cleanTiles2);
 const cornerTileKey = cornerTiles[0].tileKey;
-buildMap(cleanTiles2, cornerTileKey);
+let fullMap = buildMap(cleanTiles2, cornerTileKey);
+const rowLength = fullMap.length;
+const snakeRegex = new RegExp(
+  `#(.{${rowLength - 18}})#(.{4})##(.{4})##(.{4})###(.{${
+    rowLength - 18
+  }})#(.{2})#(.{2})#(.{2})#(.{2})#(.{2})#`,
+  "g"
+);
 
+const snakeReplacement = "O$1O$2OO$3OO$4OOO$5O$6O$7O$8O$9O$10O";
+
+for (let i = 0; i < 4; i++) {
+  fullMap = fullMap.map((s, index) =>
+    fullMap
+      .map((t) => t[index])
+      .reverse()
+      .join("")
+  );
+
+  if (snakeRegex.test(fullMap.join(":"))) {
+    console.log("asdasd");
+    return;
+  }
+}
+fullMap = fullMap.map((s) => s.split("").reverse().join(""));
+for (let i = 0; i < 4; i++) {
+  fullMap = fullMap.map((s, index) =>
+    fullMap
+      .map((t) => t[index])
+      .reverse()
+      .join("")
+  );
+  console.log(fullMap);
+
+  if (snakeRegex.test(fullMap.join(":"))) {
+    console.log("asdasd");
+    return;
+  }
+}
+
+const snakeMap = fullMap.join(":").replace(snakeRegex, snakeReplacement);
+
+//Function to build the map
 function buildMap(tiles, tileKey) {
-  const map = [];
-  const mapWidth = Math.sqrt(tiles.length);
-  const cornerTile = tiles.find((t) => t.tileKey === tileKey);
+  let map = [];
+  let cornerTile = tiles.find((t) => t.tileKey === tileKey);
   const cornerTileOrientation = cornerTile.edges
     .filter((e) => !!e.matchedEdge)
     .map((e) => e.edgeType)
     .join("");
+
+  //Make top right corner
   switch (cornerTileOrientation) {
     case "03":
     case "30":
       transformTile(cornerTile, 180, false);
+      break;
+    case "01":
+    case "10":
+      transformTile(cornerTile, 90, false);
+      break;
+    case "23":
+    case "32":
+      transformTile(cornerTile, 270, false);
   }
+
+  //add corner to map ...IT BEGINS
+  map = [...cornerTile.tileData];
+
+  let recentTile = cornerTile;
+  for (let i = 1; i < mapWidth; i++) {
+    const matchedEdge = recentTile.edges.find(
+      (e) => e.edgeType === 1
+    ).matchedEdge;
+    const flip = matchedEdge.flipped ? null : "x";
+    recentTile = tiles.find((t) => t.tileKey === matchedEdge.tileKey);
+    switch (matchedEdge.edgeType) {
+      case 0:
+        transformTile(recentTile, 270, flip);
+        break;
+      case 1:
+        transformTile(recentTile, 180, flip);
+        break;
+      case 2:
+        transformTile(recentTile, 90, flip);
+        break;
+      case 3:
+        transformTile(recentTile, 0, flip);
+        break;
+    }
+    map = map.map((s, index) => (s += recentTile.tileData[index].substring(1)));
+  }
+
+  //First row done!! it's time to loop until the map is complete
+  for (let i = 1; i < mapWidth; i++) {
+    const matchedEdge = cornerTile.edges.find(
+      (e) => e.edgeType === 2
+    ).matchedEdge;
+    const flip = matchedEdge.flipped ? null : "y";
+    cornerTile = tiles.find((t) => t.tileKey === matchedEdge.tileKey);
+    switch (matchedEdge.edgeType) {
+      case 1:
+        transformTile(cornerTile, 270, flip);
+        break;
+      case 2:
+        transformTile(cornerTile, 180, flip);
+        break;
+      case 3:
+        transformTile(cornerTile, 90, flip);
+        break;
+      case 0:
+        transformTile(cornerTile, 0, flip);
+        break;
+    }
+
+    let newMap = cornerTile.tileData.slice(1);
+    let recentTile = { ...cornerTile };
+    for (let j = 1; j < mapWidth; j++) {
+      const matchedEdge = recentTile.edges.find(
+        (e) => e.edgeType === 1
+      ).matchedEdge;
+      const flip = matchedEdge.flipped ? null : "x";
+      recentTile = tiles.find((t) => t.tileKey === matchedEdge.tileKey);
+      switch (matchedEdge.edgeType) {
+        case 0:
+          transformTile(recentTile, 270, flip);
+          break;
+        case 1:
+          transformTile(recentTile, 180, flip);
+          break;
+        case 2:
+          transformTile(recentTile, 90, flip);
+          break;
+        case 3:
+          transformTile(recentTile, 0, flip);
+          break;
+      }
+      newMap = newMap.map(
+        (s, index) => (s += recentTile.tileData[index + 1].substring(1))
+      );
+    }
+
+    map = [...map, ...newMap];
+  }
+
+  return map;
 }
 
 function transformTile(tile, rotation, flip) {
   switch (rotation) {
-    case 90:
-      tile.edges.forEach((e) => (e.edgeType = (e.edgeType + 1) % 4));
-      break;
-    case 180:
-      tile.edges.forEach((e) => (e.edgeType = (e.edgeType + 2) % 4));
-      break;
     case 270:
-      tile.edges.forEach((e) => (e.edgeType = (e.edgeType + 3) % 4));
+      rotateTile(tile);
+    case 180:
+      rotateTile(tile);
+    case 90:
+      rotateTile(tile);
       break;
-  }
-  switch (flip) {
-    case "x":
-      const tempTile = tile.edges.find((e) => e.edgeType === 0);
-      tile.edges.find((e) => e.edgeType === 2).edgeType = 0;
-      tempTile.edgeType = 2;
-      tile.edges.filter((e) => [1, 3].includes());
   }
 
-  console.log(tile.edges);
+  switch (flip) {
+    case "x":
+      const tempTileX = tile.edges.find((e) => e.edgeType === 0);
+      tile.edges.find((e) => e.edgeType === 2).edgeType = 0;
+      tempTileX.edgeType = 2;
+      tile.edges
+        .filter((e) => [1, 3].includes(e.edgeType))
+        .forEach((e) => {
+          e.edge = e.edge.split("").reverse().join("");
+        });
+      tile.edges.forEach((e) => {
+        if (e.matchedEdge) {
+          e.matchedEdge.flipped = !e.matchedEdge.flipped;
+        }
+      });
+      tile.tileData.reverse();
+      break;
+    case "y":
+      const tempTileY = tile.edges.find((e) => e.edgeType === 1);
+      tile.edges.find((e) => e.edgeType === 3).edgeType = 1;
+      tempTileY.edgeType = 3;
+      tile.edges
+        .filter((e) => [0, 2].includes(e.edgeType))
+        .forEach((e) => {
+          e.edge = e.edge.split("").reverse().join("");
+        });
+      tile.edges.forEach((e) => {
+        if (e.matchedEdge) {
+          e.matchedEdge.flipped = !e.matchedEdge.flipped;
+        }
+      });
+      tile.tileData = tile.tileData.map((s) => s.split("").reverse().join(""));
+      break;
+  }
+
+  function rotateTile(tileRotate) {
+    tileRotate.edges.forEach((e) => (e.edgeType = (e.edgeType + 1) % 4));
+    tileRotate.tileData = tileRotate.tileData.map((s, index) =>
+      tileRotate.tileData
+        .map((t) => t[index])
+        .reverse()
+        .join("")
+    );
+  }
 }
 
 function buildMatchedEdges(tiles) {
-  const edgeDictionary = tiles.reduce((a, b) => [...a, ...b.edges], []);
+  //seriously!?!?! why so deep the references :(
+  const edgeDictionary = tiles.reduce(
+    (a, b) => [
+      ...a,
+      ...b.edges.map((e) => {
+        return { ...e };
+      }),
+    ],
+    []
+  );
+
   tiles.forEach((tile) => {
     const newDict = edgeDictionary.filter((e) => e.tileKey !== tile.tileKey);
     tile.edges.forEach((edge) => {
@@ -130,12 +306,12 @@ function buildEdgesV2(rawTiles) {
     const edgeB = {
       tileKey,
       edgeType: 2,
-      edge: rows[lastIndex],
+      edge: rows[lastIndex].split("").reverse().join(""),
     };
     const edgeL = {
       tileKey,
       edgeType: 3,
-      edge: edge1,
+      edge: edge1.split("").reverse().join(""),
     };
     const edgeR = {
       tileKey,
