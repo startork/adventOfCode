@@ -45,8 +45,10 @@ function buildEdges(rawTiles) {
 const mapWidth = Math.sqrt(tilesRaw.length);
 const cleanTiles2 = buildEdgesV2(tilesRaw);
 buildMatchedEdges(cleanTiles2);
+
 const cornerTileKey = cornerTiles[0].tileKey;
 let fullMap = buildMap(cleanTiles2, cornerTileKey);
+
 const rowLength = fullMap.length;
 const snakeRegex = new RegExp(
   `#(.{${rowLength - 18}})#(.{4})##(.{4})##(.{4})###(.{${
@@ -54,39 +56,41 @@ const snakeRegex = new RegExp(
   }})#(.{2})#(.{2})#(.{2})#(.{2})#(.{2})#`,
   "g"
 );
-
 const snakeReplacement = "O$1O$2OO$3OO$4OOO$5O$6O$7O$8O$9O$10O";
 
-for (let i = 0; i < 4; i++) {
-  fullMap = fullMap.map((s, index) =>
-    fullMap
-      .map((t) => t[index])
-      .reverse()
-      .join("")
-  );
-
-  if (snakeRegex.test(fullMap.join(":"))) {
-    console.log("asdasd");
-    return;
-  }
+//Because this is an overlapping regex we need to do it multiple times
+let snakeMap = findSnake(fullMap).join(":");
+while (snakeRegex.test(snakeMap)) {
+  snakeMap = snakeMap.replace(snakeRegex, snakeReplacement);
 }
-fullMap = fullMap.map((s) => s.split("").reverse().join(""));
-for (let i = 0; i < 4; i++) {
-  fullMap = fullMap.map((s, index) =>
-    fullMap
-      .map((t) => t[index])
-      .reverse()
-      .join("")
-  );
-  console.log(fullMap);
+console.log("Part 2: " + snakeMap.match(/#/g).length);
 
-  if (snakeRegex.test(fullMap.join(":"))) {
-    console.log("asdasd");
-    return;
+function findSnake(map) {
+  for (let i = 0; i < 4; i++) {
+    if (snakeRegex.test(map.join(":"))) {
+      return map;
+    }
+    map = map.map((s, index) =>
+      map
+        .map((t) => t[index])
+        .reverse()
+        .join("")
+    );
   }
+  map = map.map((s) => s.split("").reverse().join(""));
+  for (let i = 0; i < 4; i++) {
+    if (snakeRegex.test(map.join(":"))) {
+      return map;
+    }
+    map = map.map((s, index) =>
+      map
+        .map((t) => t[index])
+        .reverse()
+        .join("")
+    );
+  }
+  return null;
 }
-
-const snakeMap = fullMap.join(":").replace(snakeRegex, snakeReplacement);
 
 //Function to build the map
 function buildMap(tiles, tileKey) {
@@ -136,7 +140,7 @@ function buildMap(tiles, tileKey) {
         transformTile(recentTile, 0, flip);
         break;
     }
-    map = map.map((s, index) => (s += recentTile.tileData[index].substring(1)));
+    map = map.map((s, index) => (s += recentTile.tileData[index]));
   }
 
   //First row done!! it's time to loop until the map is complete
@@ -161,7 +165,7 @@ function buildMap(tiles, tileKey) {
         break;
     }
 
-    let newMap = cornerTile.tileData.slice(1);
+    let newMap = cornerTile.tileData;
     let recentTile = { ...cornerTile };
     for (let j = 1; j < mapWidth; j++) {
       const matchedEdge = recentTile.edges.find(
@@ -183,9 +187,7 @@ function buildMap(tiles, tileKey) {
           transformTile(recentTile, 0, flip);
           break;
       }
-      newMap = newMap.map(
-        (s, index) => (s += recentTile.tileData[index + 1].substring(1))
-      );
+      newMap = newMap.map((s, index) => (s += recentTile.tileData[index]));
     }
 
     map = [...map, ...newMap];
@@ -322,7 +324,9 @@ function buildEdgesV2(rawTiles) {
     return {
       tileKey,
       edges: [edgeT, edgeB, edgeL, edgeR],
-      tileData: rows,
+      tileData: rows
+        .map((r) => r.substring(1, r.length - 1))
+        .slice(1, rows.length - 1),
     };
   });
 }
