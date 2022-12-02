@@ -28,4 +28,4 @@ const topThree = elfTotals.reduce(
   [0, 0, 0]
 );
 
-console.log(topThree[0] + topThree[1] + topThree[2]);
+console.log(topThree.reduce((a,b) => a + b, 0));
