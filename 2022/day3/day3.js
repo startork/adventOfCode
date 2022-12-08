@@ -18,20 +18,23 @@ const scores = elves.map((e) => {
 console.log(scores.reduce((a, b) => a + b, 0));
 
 // Part Two
-const elvesV2 = text.split("\r\n").reduce((a, b) => {
-  const currIndex = a.length - 1;
-  if (a[currIndex].length < 3) a[currIndex].push(b);
-  else a.push([b]);
+const elvesV2 = text.split("\r\n").reduce(
+  (a, b) => {
+    const currIndex = a.length - 1;
+    if (a[currIndex].length < 3) a[currIndex].push(b);
+    else a.push([b]);
 
-  return a;
-}, [[]]);
+    return a;
+  },
+  [[]]
+);
 
-const scoresV2 = elvesV2.map(e => {
+const scoresV2 = elvesV2.map((e) => {
   const letter =
-  e[0]
-    .split("")
-    .find((l) => e[1].includes(l) && e[2].includes(l))
-    .charCodeAt(0) - 96;
-    return letter < 0 ? letter + 58 : letter;
-})
-console.log(scoresV2.reduce((a,b) => a+b, 0));
+    e[0]
+      .split("")
+      .find((l) => e[1].includes(l) && e[2].includes(l))
+      .charCodeAt(0) - 96;
+  return letter < 0 ? letter + 58 : letter;
+});
+console.log(scoresV2.reduce((a, b) => a + b, 0));
